@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <script src="https://telegram.org/js/telegram-web-app.js?1"></script>
+    <style>
+        :root {
+            --ios-blue: #007AFF;
+            --glass: rgba(255, 255, 255, 0.25);
+            --border: rgba(255, 255, 255, 0.4);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background: #000;
+            font-family: -apple-system, system-ui, sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            overflow: hidden;
+        }
+
+        /* Тот самый Liquid Background - живые пятна */
+        .blob {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: linear-gradient(135deg, #007AFF, #5856D6, #FF2D55);
+            filter: blur(80px);
+            border-radius: 50%;
+            z-index: -1;
+            animation: move 15s infinite alternate ease-in-out;
+        }
+
+        @keyframes move {
+            from { transform: translate(-50%, -50%) scale(1); }
+            to { transform: translate(50%, 50%) scale(1.2); }
+        }
+
+        /* Настоящее Liquid Glass */
+        .glass-card {
+            width: 90%;
+            max-width: 350px;
+            padding: 30px;
+            background: var(--glass);
+            /* Секрет глубины: blur + saturate + контраст */
+            backdrop-filter: blur(40px) saturate(200%) contrast(90%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%) contrast(90%);
+            border: 1px solid var(--border);
+            border-radius: 35px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        h1 { font-size: 24px; font-weight: 700; margin-bottom: 25px; }
+
+        /* Кнопка с эффектом стекла */
+        .glass-btn {
+            width: 100%;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            color: white;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            margin-top: 10px;
+        }
+
+        .glass-btn:active {
+            transform: scale(0.94);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #api-info {
+            font-size: 11px;
+            margin-top: 20px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blob"></div>
+
+    <div class="glass-card">
+        <h1>Вход</h1>
+        <p style="margin-bottom: 25px; opacity: 0.8;">Liquid Glass Interface</p>
+        
+        <button class="glass-btn" id="loginBtn">Войти через Telegram</button>
+        
+        <div id="api-info">Проверка статуса API...</div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const btn = document.getElementById('loginBtn');
+        const info = document.getElementById('api-info');
+
+        // Инициализация БЕЗ зависаний
+        window.addEventListener('load', () => {
+            try {
+                tg.ready();
+                tg.expand();
+                
+                // Проверяем, есть ли данные пользователя
+                if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                    info.innerText = `Подключено: ${tg.initDataUnsafe.user.first_name}`;
+                    info.style.color = "#34C759";
+                } else {
+                    info.innerText = "API готов (запустите в боте)";
+                }
+            } catch (e) {
+                info.innerText = "Ошибка инициализации API";
+            }
+        });
+
+        // Обработка клика
+        btn.addEventListener('click', () => {
+            // 1. Вибрация (Haptic) - работает только на телефонах
+            if (tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+
+            // 2. Вместо зависающего alert используем встроенный Telegram Popup
+            tg.showConfirm("Вы уверены, что хотите войти?", (confirmed) => {
+                if (confirmed) {
+                    tg.MainButton.setText("УСПЕШНО").show();
+                    setTimeout(() => tg.close(), 2000);
+                }
+            });
+        });
+    </script><script src="https://telegram.org/js/telegram-web-app.js" async></script>
+
+<script>
+    window.onload = () => {
+        // Проверяем наличие API каждые 100мс, пока оно не подгрузится
+        const interval = setInterval(() => {
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                
+                // Настраиваем цвета, когда API точно готов
+                tg.setHeaderColor(tg.colorScheme === 'dark' ? '#1c1c1e' : '#ffffff');
+                
+                console.log("Telegram API Loaded Successfully");
+                clearInterval(interval);
+            }
+        }, 100);
+    };
+</script>
+
+</body>
+</html>
